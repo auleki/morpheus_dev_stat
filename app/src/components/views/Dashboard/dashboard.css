@@ -1,0 +1,113 @@
+h2, h3, h1, h4 { font-weight: 400 }
+
+.dashboard {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #ffffff;
+    height: 100vh;
+    background-color: #1a1a1a;
+    overflow-y: hidden;
+    background:repeat-x url('../../../wp_bg.png') center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.header {
+    background-color: #1A1A1A;
+    height: 30vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1rem;
+}
+
+.top_navbar {
+    /* display */
+}
+
+.wallet_selector {
+    background-color: #272727;
+    padding: 1rem;
+}
+
+.top_navbar,
+.bottom_navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.bottom_navbar .navbar_subtitle {
+    color: #8B8B8B;
+}
+
+.date_text {
+    font-size: 1.2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.date_text .day {
+    text-align: right;
+    font-size: .9rem;
+}
+
+.date_text .year {
+    color: #8B8B8B;
+    font-size: 0.9rem;
+}
+
+.date_text {
+
+}
+
+.date_text {
+
+}
+
+.stat_cards {
+    background-color: #1A1A1A;
+    border: 2px solid #323232;
+    margin: 1rem;
+    border-radius: 5px;
+}
+
+.stat_card {
+    background-color: #1A1A1A;
+    color: #00DD4B;
+    border: 2px solid #323232;
+    text-align: center;
+    display: inline-flex;
+    flex-direction: column;
+    margin: 2rem;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.stat_card .title {
+    background-color: #E8E8E8;
+    color: #1A1A1A;
+    padding: .3rem 2rem;
+    /* border-bottom-left-radius: 5px; */
+    /* border-bottom-right-radius: 5px; */
+}
+
+.stat_card .value {
+    padding: 1rem .5rem;
+    font-size: 2rem;
+}
+
+.stat_card .value .currency {
+    color: #ffffff;
+    font-size: 1rem;
+}
+
+.stat_card .value, 
+.stat_card .title {
+    /* padding: 1 */
+}
+
+.connect_buttons {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
