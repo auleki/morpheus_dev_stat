@@ -16,13 +16,16 @@ import { createPublicClient, http } from 'viem'
 import { mainnet, mainnet as mainnetViem } from 'viem/chains'
 import Web3 from 'web3';
 import { getMORPrice } from '../../../services/userInfo';
-import { calculateTokenValue, checkMORContractsForUserBalance } from '../../../utils/helper';
+import { calculateTokenValue, checkMORContractsForUserBalance, convertWeiIntoETH } from '../../../utils/helper';
 import { ALCHEMY_API_KEY, SAMPLE_WALLET_ADDRESS } from '../../../utils/constants';
+import { ContractBalanceType } from '../../../../types/utils';
 
 
 const Dashboard = () => {
     const [account, setAccount] = useState<string>()
+    const [morPerDay, setMorPerDay] = useState<string>('')
     const [selectedNetwork, setSelectedNetwork] = useState<string>('')
+    const [morContractBalances, setMorContractBalances] = useState<ContractBalanceType[]>([])
     const [claimableMOR, setClaimableMOR] = useState<string>('0')
     const [headerDate, setHeaderDate] = useState({} as {
         year: string;
@@ -48,7 +51,7 @@ const Dashboard = () => {
 
     // const params = {
     //     abi: distributionABI as any,
-    //     address: '0x47176B2Af9885dC6C4575d4eFd63895f7Aaa4790',
+    //     address: '0x47176B2Af9885dC6C4575d4eFd63895f7Aaa4790', Proxy of distributions <- use this! 
     //     functionName: "getCurrentUserReward",
     //     args: [0, '0xe9EDa9585b6C917E7FAc1C0AD9724faB609491DC'],
     //     account: '0xe9EDa9585b6C917E7FAc1C0AD9724faB609491DC',
@@ -65,20 +68,50 @@ const Dashboard = () => {
         }
     }
 
+    const getMORPerDay = async () => {
+        const provider = new ethers.AlchemyProvider(1, ALCHEMY_API_KEY)
+        const contract = new ethers.Contract(
+            '0x47176B2Af9885dC6C4575d4eFd63895f7Aaa4790', // Proxy Distribution.sol 💎
+            // '0x4Df8bB964B7Dd0567508F0f228b76B883FC06bBD',
+            DistributionABI,
+            provider
+        )
+
+        const userData = await contract.usersData(SAMPLE_WALLET_ADDRESS, 1)
+        const balanceWeights = userData[1] // deposited[field]
+        const poolsData = await contract.poolsData("1")
+        const userWeight = ethers.formatUnits(balanceWeights, 0)// use formattedBalance variable
+        const pools = await contract.pools("1")
+        const initialReward = convertWeiIntoETH(pools[5]) // initial reward to pool
+        const decrease = convertWeiIntoETH(pools[6])    // reward decrease rate to pool
+        const todayTimestamp = new Date().getTime() / 1000 
+        const startTime = pools[0] // payoutStart for pool
+        const interval = pools[1] // payout interval for pool
+        const daysDecrease = Math.floor((todayTimestamp - Number(startTime)) / Number(interval))
+        const currentReward = Number(initialReward.formattedBalance) - (Number(decrease.formattedBalance) * daysDecrease)
+        const totalWeights =  Number(poolsData[2])
+        const morPERDay = ((Number(userWeight) / totalWeights) * currentReward).toFixed(4)
+
+        if (Number(morPERDay) < 0) return '0'
+        
+        return morPERDay
+    }
+
     // Read Morpheus Contracts
-    const getContractDataWithAlchemy = async () => {
+    const getCurrentReward = async () => {
         // 0x6a7d9b0a21649c33b019baee7dac5ac358147f86: GOLDEN_WALLET
         const provider = new ethers.AlchemyProvider(1, ALCHEMY_API_KEY)
         const contract = new ethers.Contract(
-            '0x24C09A0C047e8A439f26682Ea51c7157b3cCc20b', // User wallet 🏦
+            '0x24C09A0C047e8A439f26682Ea51c7157b3cCc20b', // Distribution.sol 💎
             // '0x4Df8bB964B7Dd0567508F0f228b76B883FC06bBD',
             DistributionABI,
             provider
         )
         const userReward = await contract.getCurrentUserReward(1, SAMPLE_WALLET_ADDRESS)
-        // const pools = await contract.poolsData(1)
-    
-        console.log("ALCHI", { contract, userReward: Number(userReward), userRewardType: typeof userReward })
+        const rewardBalance = convertWeiIntoETH(userReward)
+        // console.log("ALCHI", { userReward: Number(userReward), userRewardType: typeof Number(userReward), rewardBalance })
+        return rewardBalance
+
     }
 
     const balance = useBalance({ address })
@@ -90,7 +123,8 @@ const Dashboard = () => {
     }, [chainId])
 
     /**
-     * Handles fetching the current price of MOR, also gets the current weight and claimable MOR assigned to wallet address
+     * Handles fetching the current price of MOR, also gets the current weight 
+     * and claimable MOR from all contracts assigned to user's wallet address
      */
     useEffect(() => {
         setDefaultNetwork()
@@ -100,17 +134,13 @@ const Dashboard = () => {
             const res = await getMORPrice()
             const currentMORPrice = (res as any)?.usd
 
-            await getContractDataWithAlchemy()
-            // const {actua} = calculateTokenValue(Number(currentMORPrice))
+            await getCurrentReward()
             setMorPrice(currentMORPrice)
-            // setClaimableMOR(fiatValueFormatted)
-            const balances = await checkMORContractsForUserBalance()
-            console.log("BALANCES[]", balances)
+            const balances = await checkMORContractsForUserBalance(undefined, SAMPLE_WALLET_ADDRESS)
+            const dailyMOR = await getMORPerDay()
+            setMorPerDay(dailyMOR)            
             setClaimableMOR((balances?.totalBalance.toLocaleString()) || '0')
-            // calculate total
-            // const totalBalance = balances?.contractBalances
-            // console.log({totalBalance});
-            
+            setMorContractBalances(balances?.contractBalances || [])
         }
         fetchMORPrice()
     }, [])
@@ -155,7 +185,7 @@ const Dashboard = () => {
         <div className="dashboard">
             <header className='header'>
                 <section className='top_navbar'>
-                    <img src={LogoImg} />                   
+                    <img src={LogoImg} />
                     {isConnected
                         ? (<UserInfo
                             userInfo={{ balance: balance?.data?.formatted, address }}
@@ -171,9 +201,17 @@ const Dashboard = () => {
 
                 <section className='bottom_navbar'>
                     <div>
-                        <h1>Overview 🗼</h1>
-                        <span className='navbar_subtitle'>Evaluate your basic stats to know what you have</span>
+                        <h1>Overview</h1>
                     </div>
+
+                    <section className="contract_balances">
+                        {morContractBalances.map(morContract => (
+                            <div key={morContract.network} className='contract_balance'>
+                                <h6 className='contract_balance_title'>{morContract.network.toUpperCase()}</h6>
+                                <span className='contract_balance_value'>{morContract.balance}</span>
+                            </div>
+                        ))}
+                    </section>
 
                     {/* Date Component */}
                     <div className='date_text'>
@@ -215,6 +253,16 @@ const Dashboard = () => {
                         </section>
                         <section className='value'>
                             <span className='price'>{claimableMOR}<span className='currency'>MOR</span></span>
+                        </section>
+                    </div>
+
+                    {/* Statistic Card */}
+                    <div className='stat_card'>
+                        <section className='title'>
+                            <span>MOR per day</span>
+                        </section>
+                        <section className='value'>
+                            <span className='price'>{morPerDay}<span className='currency'>MOR</span></span>
                         </section>
                     </div>
                 </section>

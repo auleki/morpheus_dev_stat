@@ -25,8 +25,6 @@ const metadata = {
 
 const chains = [mainnet, arbitrum] as const
 
-console.log({ chains })
-
 const config = defaultWagmiConfig({
   chains,
   projectId: PROJECT_ID,

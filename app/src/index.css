@@ -52,3 +52,41 @@ code {
   box-shadow: none;
   color: #393939;
 }
+
+.contract_balances {
+  display: flex;
+  margin-top: 1rem;
+  gap: 1rem;
+}
+
+.contract_balance {
+  text-align: center;
+  background: #272727;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: border-color 200ms ease-in-out;
+  flex-direction: column;
+  gap: .3rem;
+  padding: .5rem 1.5rem;
+  border-radius: 5px;
+  border: 2px solid transparent;
+}
+
+.contract_balance_title {
+  color: #1a1a1a;
+  display: block;
+  padding: .2rem .5rem;
+  font-weight: 700;
+  max-width: min-content;
+  border-radius: 5px;
+  background:hsl(140, 100%, 53%);
+}
+
+.contract_balance_value {
+  /* background-color: ; */
+}
+
+.contract_balance:hover {
+  border-color: hsl(140, 100%, 53%);
+}
