@@ -2,8 +2,7 @@ import { MORAddressType } from "../../types/utils"
 import { MOR_ABI } from "../abis/abi"
 
 export const ALCHEMY_API_KEY = process.env.REACT_APP_ALCHEMY_API_KEY
-// export const SAMPLE_WALLET_ADDRESS = '0xe9EDa9585b6C917E7FAc1C0AD9724faB609491DC'
-export const SAMPLE_WALLET_ADDRESS = '0x8bfa2307c282f114f4f3384fe88957eb4ed47588'
+export const DISTRIBUTION_ADDRESS = '0x24C09A0C047e8A439f26682Ea51c7157b3cCc20b'
 export const MOR_ADDRESSES: MORAddressType[] = [
     {
         network: 'arbitrum',
@@ -22,5 +21,14 @@ export const MOR_ADDRESSES: MORAddressType[] = [
         address: '0x7431ada8a591c955a994a21710752ef9b882b8e3',
         abi: MOR_ABI,
         chainID: 8453
+    }
+]
+
+export const DASH_STATS = [
+    {
+        stat: 'Claimable MOR',
+        value: "",
+        sign: "MOR",
+        isCurrency: false
     }
 ]

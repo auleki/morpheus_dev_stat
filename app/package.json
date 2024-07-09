@@ -2,6 +2,8 @@
   "name": "app",
   "version": "0.1.0",
   "private": true,
+  "main": "public/electron.js",
+  "homepage": ".",
   "dependencies": {
     "@metamask/sdk-react": "^0.26.0",
     "@tanstack/react-query": "^5.45.1",
@@ -14,7 +16,8 @@
     "@types/react-dom": "^18.3.0",
     "@walletconnect/modal": "^2.6.2",
     "@web3modal/wagmi": "^5.0.3",
-    "axios": "^1.7.2",
+    "electron": "^31.1.0",
+  "electron-is-dev": "^3.0.1",
     "ethers": "^6.13.1",
     "qrcode": "^1.5.3",
     "react": "^18.3.1",
@@ -24,14 +27,15 @@
     "typescript": "^4.9.5",
     "viem": "^2.16.1",
     "wagmi": "^2.10.4",
-    "web-vitals": "^2.1.4",
     "web3": "^4.10.0"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "dev": "concurrently -k \"BROWSER=none npm start\" \"npm:electron\"",
+    "electron": "wait-on tcp:3000 && electron ."
   },
   "eslintConfig": {
     "extends": [
@@ -52,7 +56,10 @@
     ]
   },
   "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@metamask/providers": "^17.0.0",
-    "@types/qrcode": "^1.5.5"
+    "@types/qrcode": "^1.5.5",
+    "concurrently": "^8.2.2",
+    "wait-on": "^7.2.0"
   }
 }
