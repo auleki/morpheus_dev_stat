@@ -1,5 +1,8 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('node:path');
+const isDev = require('electron-is-dev')
+const fs = require('fs');
+const url = require('url');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -13,12 +16,33 @@ const createWindow = () => {
     height: 600,
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
+      nodeIntegration: true,
+      contextIsolation: false
     },
   });
 
+  const getURL = path.join(app.getAppPath(), 'app/build/index.html');
+  const startUrl = url.format({
+    pathname: getURL,
+    protocol: 'file',
+    slashes: true
+  })
+
+  // ensure a build directory exists
+  const buildPath = path.join(app.getAppPath(), 'app/build');
+  
+  // Check if build directory exists
+  if (!fs.existsSync(buildPath)) {
+    console.error('Build directory does not exist:', buildPath);
+    mainWindow.loadURL(`data:text/html,<h1>Error: React Build directory not found</h1><p>Please ensure the app is built correctly.</p>`);
+    return;
+  }
+  
+  mainWindow.loadURL(startUrl);
+  mainWindow.removeMenu();
+
   // and load the index.html of the app.
   // mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
-  mainWindow.loadURL('http://localhost:3001')
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools();

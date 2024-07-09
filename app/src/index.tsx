@@ -4,12 +4,11 @@ import { mainnet, arbitrum, sepolia, baseSepolia } from 'wagmi/chains'
 import { createWeb3Modal } from "@web3modal/wagmi/react"
 import { defaultWagmiConfig } from "@web3modal/wagmi/react/config"
 import ReactDOM, { createRoot } from 'react-dom/client';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { RouterProvider, createHashRouter } from 'react-router-dom';
 import './index.css';
 import { MetaMaskProvider } from '@metamask/sdk-react';
-import reportWebVitals from './reportWebVitals';
+
 import Dashboard from './components/views/Dashboard';
-import QRCode from 'qrcode'
 import { QrCodeModal } from './components/modals/QRCodeModal';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -24,8 +23,6 @@ const metadata = {
 }
 
 const chains = [mainnet, arbitrum] as const
-
-console.log({ chains })
 
 const config = defaultWagmiConfig({
   chains,
@@ -43,7 +40,7 @@ createWeb3Modal({
 
 
 // DEFINE ROUTER 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     path: "/",
     element: <Dashboard />
@@ -128,8 +125,3 @@ root.render(
     </QueryClientProvider>
   </WagmiProvider>
 );
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
