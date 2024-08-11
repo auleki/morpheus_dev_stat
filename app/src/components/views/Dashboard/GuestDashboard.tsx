@@ -13,7 +13,6 @@ import {BiSolidMessageSquareAdd} from "react-icons/bi";
 import EmptyWalletAddresses from "../../EmptyScreens/EmptyWalletAddresses";
 
 export default function GuestDashboard({pickWallet}: GuestDashboardProps) {
-    const friends = useLiveQuery(() => db.friends.toArray())
     const wallets = useLiveQuery(() => db.wallets.toArray())
     const activeWallet = useLiveQuery(() => db.activeWallet.toArray())
     const [walletNameInput, setWalletNameInput] = useState<string>('')
@@ -29,7 +28,7 @@ export default function GuestDashboard({pickWallet}: GuestDashboardProps) {
 
     useEffect(() => {
         loadWalletAddresses(wallets || [])
-    }, [friends, wallets]);
+    }, [wallets]);
 
     const updateWalletAddressInput = (e: any) => setWalletAddressInput(e.target.value)
 
@@ -51,7 +50,6 @@ export default function GuestDashboard({pickWallet}: GuestDashboardProps) {
 
     async function addNewWallet(e: React.FormEvent) {
         // take input from inputs fields and create wallet object
-        
         e.preventDefault()
         
         const newWallet: IWalletAddress = {
@@ -86,7 +84,6 @@ export default function GuestDashboard({pickWallet}: GuestDashboardProps) {
 
     function loadWalletAddresses(wallets: IWalletAddress[]) {
         const orderedWallets = wallets.sort((a: IWalletAddress, b: IWalletAddress) => Number(b.dateCreated.getTime()) - Number(a.dateCreated.getTime()))
-        console.log({orderedWallets, dates: wallets.map(wallet => wallet.dateCreated.getTime())})
         setWalletList(orderedWallets)
     }
 
