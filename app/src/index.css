@@ -8,6 +8,23 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.red {
+  outline: 2px solid crimson;
+}
+
+.flex {
+  display: flex;
+}
+
+.items_center {
+  align-items: center;
+}
+
+.space_between {
+  justify-content: space-between;
+}
+
+
 
 
 code {
@@ -17,12 +34,20 @@ code {
 
 .button {
   border: none;
+  /*box-shadow: 3px 1px 1px 1px #00DD4B;*/
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: .25rem;
   padding: .5rem 1rem;
   border-radius: 5px;
   font-weight: 600;
   transition: background ease-in 150ms box-shadow ease-in 200ms;
+}
 
+.button .button_icon {
+  font-size: 1rem;
+  margin-top: .25rem
 }
 
 .button:hover {
@@ -42,6 +67,17 @@ code {
   border-color: hsl(140, 100%, 53%);
 }
 
+.button.cancel {
+  background: #ffff;
+  color: #dc143c;
+  transition: ease-in 200ms background;
+}
+
+.button.cancel:hover {
+  background: antiquewhite;
+}
+
+
 .button.solid {
   box-shadow: 3px 1px 1px 1px #00DD4B;
   background-color: #00DD4B;
@@ -59,6 +95,14 @@ code {
   gap: 1rem;
 }
 
+.contract_icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  object-fit: cover;
+  background: transparent;
+  border-radius: 50%;
+}
+
 .contract_balance {
   text-align: center;
   background: #272727;
@@ -67,10 +111,20 @@ code {
   align-items: center;
   transition: border-color 200ms ease-in-out;
   flex-direction: column;
-  gap: .3rem;
+  gap: .5rem;
+  min-width: 5rem; 
   padding: .5rem 1.5rem;
   border-radius: 5px;
   border: 2px solid transparent;
+}
+
+.contract_balance_header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
 }
 
 .contract_balance_title {
@@ -89,4 +143,106 @@ code {
 
 .contract_balance:hover {
   border-color: hsl(140, 100%, 53%);
+}
+
+.scrollable {
+  scrollbar-width: thin;
+  scrollbar-color: gainsboro #1E5741;
+}
+
+.scrollable::-webkit-scrollbar {
+  width: 12px;
+  border-radius: 1rem;
+}
+
+.scrollable::-webkit-scrollbar-thumb {
+  background: gainsboro;
+  border-radius: 20px;
+}
+
+.scrollable::-webkit-scrollbar-track {
+  background: green;
+  border-radius: 20px;
+}
+
+.scrollable::-webkit-scrollbar-corner {
+  background: blue;
+  border-radius: 20px;
+}
+
+.input_group {
+  display: flex;
+  flex-direction: column;
+  gap: .2rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.input_group input {
+  padding: 1rem .5rem;
+  font-family: inherit;
+  background: linear-gradient(-90deg, hsl(157, 49%, 11%), hsl(157, 49%, 17%), hsl(157, 49%, 13%));
+  color: white;
+  border: 2px solid #1E5741;
+  transition: all ease 200ms;
+  border-radius: 10px;
+}
+
+.input_group input:focus {
+  outline: 0;
+  border-color: #00DD4B;
+}
+
+.input_group input::placeholder {
+  color: gainsboro;
+}
+
+.input_group label {
+  font-size: 0.8rem;
+}
+
+.new_wallet_form {
+  font-family: 'Karla', sans-serif;
+  border-bottom: 2px solid #1E5741;
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+}
+
+.error {
+  margin: 0 0 1rem 0;
+  opacity: .6;
+  background: #dc143c;
+  display: inline-flex;
+  padding: 1rem .5rem;
+  border-radius: .5rem;
+}
+
+.empty_wallet_addresses {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty_wallet_address_image {
+  
+}
+
+.floating {
+  animation: floating 3s linear infinite;
+}
+
+@keyframes floating {
+  0% {
+    transform: translateY(0rem);
+  } 
+  
+  50% {
+    transform: translateY(1.5rem);
+  }
+  
+  100% {
+    transform: translateY(-0rem);
+  }
 }

@@ -2,10 +2,12 @@ export type MORAddressType = {
     network: string;
     address: string;
     abi: any;
-    chainID: number
+    chainID: number;
+    logoImg: string;
 }
 
 export type ContractBalanceType = {
     balance: number;
-    network: string
+    network: string;
+    logoImg: string;
 }

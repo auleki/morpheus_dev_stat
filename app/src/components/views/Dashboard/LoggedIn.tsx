@@ -1,29 +1,27 @@
-import React, { useEffect, useState, ReactElement } from 'react'
-import { checkMORContractsForUserBalance, convertWeiIntoETH } from '../../../utils/helper'
-import { getMORPrice } from '../../../services/userInfo'
-import { useSDK } from '@metamask/sdk-react'
-import { useAccount, useBalance, useDisconnect } from 'wagmi'
-import { DistributionABI } from '../../../abis/abi'
-import { ALCHEMY_API_KEY, DISTRIBUTION_ADDRESS } from '../../../utils/constants'
-import { ethers } from 'ethers'
+import React, {ReactElement, useEffect, useState} from 'react'
+import {checkMORContractsForUserBalance, convertWeiIntoETH} from '../../../utils/helper'
+import {getMORPrice} from '../../../services/userInfo'
+import {useSDK} from '@metamask/sdk-react'
+import {useAccount, useBalance, useDisconnect} from 'wagmi'
+import {DistributionABI} from '../../../abis/abi'
+import {ALCHEMY_API_KEY, DISTRIBUTION_ADDRESS} from '../../../utils/constants'
+import {ethers} from 'ethers'
 import './dashboard.css'
 import LogoImg from '../../../mor_logo_white.svg'
-import { useWeb3Modal } from '@web3modal/wagmi/react'
-import { ContractBalanceType } from '../../../../types/utils'
+import {useWeb3Modal} from '@web3modal/wagmi/react'
+import {PiQrCodeFill} from "react-icons/pi";
+import {ContractBalanceType} from '../../../../types/utils'
 import WalletConnect from '../../WalletConnect'
 import UserInfo from '../../UserInfo'
-import { Chain } from 'viem'
-// import { type LoggedInTypes } from '../../../../types/components'
+import {IWalletAddress, LoggedInTypes} from "../../../../types/components";
+import {useLiveQuery} from "dexie-react-hooks";
+import {indexDBInstance as db} from "../../../db/db";
 
-type LoggedInTypes = {
-    address: string |undefined;
-    chainID: number;
-    isConnected: boolean;
-    chain: Chain | undefined;
-}
 
-export default function LoggedIn(props : LoggedInTypes):ReactElement<any> {
-    const [account, setAccount] = useState<string>()
+export default function LoggedIn(props: LoggedInTypes): ReactElement<any> {
+    // const [account, setAccount] = useState<string>(
+    const activeWallet = useLiveQuery(() => db.activeWallet.toArray())
+    const [selectedAddress, setSelectedAddress] = useState<`0x${string}` | undefined>(props.pickedAddress)
     const [morPerDay, setMorPerDay] = useState<string>('')
     const [selectedNetwork, setSelectedNetwork] = useState<string>('')
     const [morContractBalances, setMorContractBalances] = useState<ContractBalanceType[]>([])
@@ -36,10 +34,11 @@ export default function LoggedIn(props : LoggedInTypes):ReactElement<any> {
     })
     const [morPrice, setMorPrice] = useState(0);
     const [currentWeightReward, setCurrentWeightReward] = useState<number>(0)
+    const [currentWallet, setCurrentWallet] = useState<IWalletAddress>({} as IWalletAddress)
     const [isLoading, setIsLoading] = useState<boolean>(false)
     const [network, setNetwork] = useState<string>('')
-    const { close, open } = useWeb3Modal()
-    const { disconnect, status } = useDisconnect()
+    const {close, open} = useWeb3Modal()
+    const {disconnect, status} = useDisconnect()
     const {
         address,
         isReconnecting,
@@ -58,6 +57,22 @@ export default function LoggedIn(props : LoggedInTypes):ReactElement<any> {
     //     account: '0xe9EDa9585b6C917E7FAc1C0AD9724faB609491DC',
     // }
 
+    useEffect(() => {
+        if (activeWallet) {
+            setSelectedAddress(activeWallet[0].address)
+        } else if (props.pickedAddress) {
+            console.log({pickedAddy: props.pickedAddress})
+            setSelectedAddress(props.pickedAddress)
+        } else {
+            console.log({giveAddress: address})
+            setSelectedAddress(address)
+        }
+    }, [selectedAddress, activeWallet]);
+
+    useEffect(() => {
+        setCurrentWallet(activeWallet?.[0] ?? {} as IWalletAddress)
+    }, [activeWallet]);
+
     const initializeDate = () => {
         const newDate = new Date().toDateString()
         const [dayString, month, dayInt, year] = newDate.split('/').join('').split(' ')
@@ -70,6 +85,7 @@ export default function LoggedIn(props : LoggedInTypes):ReactElement<any> {
     }
 
     const getMORPerDay = async () => {
+        // const provider = new ethers.Contract()
         const provider = new ethers.AlchemyProvider(1, ALCHEMY_API_KEY)
         const contract = new ethers.Contract(
             '0x47176B2Af9885dC6C4575d4eFd63895f7Aaa4790', // Proxy Distribution.sol 💎
@@ -78,10 +94,11 @@ export default function LoggedIn(props : LoggedInTypes):ReactElement<any> {
             provider
         )
 
-        const userData = await contract.usersData(address, 1)
+        const userData = await contract.usersData(selectedAddress, 1)
         const balanceWeights = userData[1] // deposited[field]
         const poolsData = await contract.poolsData("1")
         const userWeight = ethers.formatUnits(balanceWeights, 0)// use formattedBalance variable
+        setCurrentWeightReward(Number(userWeight))
         const pools = await contract.pools("1")
         const initialReward = convertWeiIntoETH(pools[5]) // initial reward to pool
         const decrease = convertWeiIntoETH(pools[6])    // reward decrease rate to pool
@@ -108,42 +125,44 @@ export default function LoggedIn(props : LoggedInTypes):ReactElement<any> {
             DistributionABI,
             provider
         )
-        const userReward = await contract.getCurrentUserReward(1, address) // (PoolID, UserAddress)
-        const rewardBalance = convertWeiIntoETH(userReward)
-        // console.log("ALCHI", { userReward: Number(userReward), userRewardType: typeof Number(userReward), rewardBalance })
-        return rewardBalance
-
+        const userReward = await contract.getCurrentUserReward(1, selectedAddress) // (PoolID, UserAddress)
+        return convertWeiIntoETH(userReward)
     }
 
-    const balance = useBalance({ address })
+    const balance = useBalance({address: selectedAddress})
     // const { walletInfo } = useWalletInfo()
-    const { sdk, connected, connecting, ...restUseSdk } = useSDK()
+    const {sdk, connected, connecting, ...restUseSdk} = useSDK()
 
     useEffect(() => {
         switchChainNetwork()
     }, [chainId])
 
     /**
-     * Handles fetching the current price of MOR, also gets the current weight 
+     * Handles fetching the current price of MOR, also gets the current weight
      * and claimable MOR from all contracts assigned to user's wallet address
      */
     useEffect(() => {
         setDefaultNetwork()
         const todayDate = initializeDate()
         setHeaderDate(todayDate)
-        const fetchMORPrice = async () => {
-            const res = await getMORPrice()
-            const currentMORPrice = (res as any)?.usd
+        // if (selectedAddress)
+        if (selectedAddress) {
+            const fetchMORPrice = async () => {
+                const res = await getMORPrice()
+                const currentMORPrice = (res as any)?.usd
 
-            await getCurrentReward()
-            setMorPrice(currentMORPrice)
-            const balances = await checkMORContractsForUserBalance(undefined, address)
-            const dailyMOR = await getMORPerDay()
-            setMorPerDay(dailyMOR)
-            setClaimableMOR((balances?.totalBalance.toLocaleString()) || '0')
-            setMorContractBalances(balances?.contractBalances || [])
+                const reward = await getCurrentReward()
+                setMorPrice(currentMORPrice)
+                const balances = await checkMORContractsForUserBalance(undefined, selectedAddress)
+                const dailyMOR = await getMORPerDay()
+                setMorPerDay(dailyMOR)
+                setClaimableMOR(String(reward.balance))
+                // setClaimableMOR((balances?.totalBalance.toLocaleString()) || '0')
+                setMorContractBalances(balances?.contractBalances || [])
+            }
+            fetchMORPrice()
         }
-        fetchMORPrice()
+        
     }, [])
 
     const DASH_STATS = [
@@ -182,7 +201,7 @@ export default function LoggedIn(props : LoggedInTypes):ReactElement<any> {
     // Change the chain network
     async function switchChainNetwork(openModal: boolean = false) {
         // If the open modal flag is not passed, the modal does not opem.
-        if (openModal) open({ view: 'Networks' })
+        if (openModal) open({view: 'Networks'})
         setNetwork(chain?.name || 'ethereum')
     }
 
@@ -201,18 +220,37 @@ export default function LoggedIn(props : LoggedInTypes):ReactElement<any> {
         <div>
             <header className='header'>
                 <section className='top_navbar'>
-                    <img src={LogoImg} />
+                    <img src={LogoImg}/>
                     {isConnected
                         ? (<UserInfo
-                            userInfo={{ balance: balance?.data?.formatted, address }}
+                            userInfo={{balance: balance?.data?.formatted, address: selectedAddress}}
                             logoutUser={logoutUser}
                             loading={isLoading}
                             network={network}
                             switchChainNetwork={() => switchChainNetwork(true)}
                         />)
-                        : (<WalletConnect
+                        : (
+                            <div className="wallet_data_section">
+                                {currentWallet.name ? (
+                                    <section className={"wallet_data"}>
+                                        <h5 className={"space_between flex items_center"}>
+                                            <span className={"wallet_address_icon"}><PiQrCodeFill /></span>
+                                            <span>{currentWallet?.address}</span>
+                                        </h5>
+                                        <span className={"wallet_name"}>{currentWallet?.name}</span>
+                                    </section>
+                                ) : null }
+                                <WalletConnect
+                                    changeWallet={props.changeWallet || (() => {
+                                    })}
+                                    connectToWallet={connectToWallet}
+                                />
+                            </div>
+                        )}
+                    {/* : (<WalletConnect
                             connectToWallet={connectToWallet}
                         />)}
+                        */}
                 </section>
 
                 <section className='bottom_navbar'>
@@ -223,7 +261,10 @@ export default function LoggedIn(props : LoggedInTypes):ReactElement<any> {
                     <section className="contract_balances">
                         {morContractBalances.map(morContract => (
                             <div key={morContract.network} className='contract_balance'>
-                                <h6 className='contract_balance_title'>{morContract.network.toUpperCase()}</h6>
+                                <section className="contract_balance_header">
+                                    <h6 className='contract_balance_title'>{morContract.network.toUpperCase()}</h6>
+                                    <img className="contract_icon" src={morContract.logoImg} alt={"token icon"}/>
+                                </section>
                                 <span className='contract_balance_value'>{morContract.balance}</span>
                             </div>
                         ))}
@@ -233,7 +274,8 @@ export default function LoggedIn(props : LoggedInTypes):ReactElement<any> {
                     <div className='date_text'>
                         <span className='day'>{headerDate?.day}</span>
                         <section>
-                            <span className='date'>{headerDate?.date} {headerDate?.month} <span className='year'>{headerDate?.year}</span></span>
+                            <span className='date'>{headerDate?.date} {headerDate?.month} <span
+                                className='year'>{headerDate?.year}</span></span>
                         </section>
                     </div>
                 </section>
@@ -268,7 +310,7 @@ export default function LoggedIn(props : LoggedInTypes):ReactElement<any> {
                             <span>Claimable MOR</span>
                         </section>
                         <section className='value'>
-                            <span className='price'>{claimableMOR}<span className='currency'>MOR</span></span>
+                            <span className='price'>{Number(claimableMOR).toFixed(6)}<span className='currency'>MOR</span></span>
                         </section>
                     </div>
 

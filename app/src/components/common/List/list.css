@@ -1,0 +1,12 @@
+﻿.list_section {
+    display: flex;
+    padding: 0 1rem 1rem 0;
+    flex-direction: column;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    white-space: nowrap;
+
+    /* New properties */
+    max-height: 80vh; /* Adjust as needed */
+}
+

@@ -57,6 +57,7 @@ export const checkMORContractsForUserBalance = async (morPrice: number = 28.5, a
             contractBalances.push({
                 network: deployedToken.network,
                 balance: fiatValue,
+                logoImg: deployedToken.logoImg
             })
             totalBalance += fiatValue
         }
