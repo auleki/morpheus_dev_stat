@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('node:path');
 const isDev = require('electron-is-dev')
 const fs = require('fs');
@@ -15,7 +15,7 @@ const createWindow = () => {
     width: 800,
     height: 600,
     webPreferences: {
-      preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
+      preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: true,
       contextIsolation: false
     },
@@ -38,8 +38,9 @@ const createWindow = () => {
     return;
   }
   
-  mainWindow.loadURL(startUrl);
-  mainWindow.removeMenu();
+  //mainWindow.loadURL(startUrl);
+  mainWindow.loadURL('http://localhost:3001');
+  // mainWindow.removeMenu();
 
   // and load the index.html of the app.
   // mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
@@ -62,6 +63,12 @@ app.whenReady().then(() => {
     }
   });
 });
+
+ipcMain.handle('pregFunction', async (event, arg) => {
+  console.log('Function called with arguments:', arg)
+  
+  return 'Result from MAIN'
+})
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
